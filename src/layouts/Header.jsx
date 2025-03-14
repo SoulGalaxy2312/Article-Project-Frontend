@@ -1,28 +1,84 @@
-const Header = () => {
+import { useState } from "react";
+import { Link } from "react-router-dom";
+
+function Header() {
+  const [showDropdown, setShowDropdown] = useState(false);
+
   return (
-    <nav className="navbar navbar-expand-lg bg-white shadow-sm px-4">
-      <div className="container-fluid">
-        {/* Logo */}
-        <a className="navbar-brand fw-bold text-dark" href="#" style={{ fontFamily: "Arial, sans-serif", fontSize: "24px" }}>
-          TechNews
-        </a>
+    <header className="bg-white shadow-sm sticky-top">
+      <div className="container-fluid d-flex align-items-center justify-content-between py-3">
         
-        {/* Search Bar */}
-        <form className="d-flex mx-auto" role="search" style={{ width: "50%" }}>
-          <input
-            className="form-control me-2"
-            type="search"
-            placeholder="Search"
-            aria-label="Search"
-          />
-          <button className="btn btn-outline-success" type="submit">Search</button>
-        </form>
-        
-        {/* Login Button */}
-        <button className="btn btn-primary">Log In</button>
+        {/* Left Section: Logo & Search Bar */}
+        <div className="d-flex align-items-center gap-3">
+          {/* Logo - Moved to the Left */}
+          <Link to="/" className="text-dark text-decoration-none fw-bold fs-4">TechNews</Link>
+
+          {/* Search Bar - Moved Closer to Logo */}
+          <div className="position-relative">
+            <input
+              type="text"
+              className="form-control form-control-sm"
+              placeholder="Search..."
+              style={{ width: "180px" }} // Adjust width as needed
+              onFocus={() => setShowDropdown(true)}
+              onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+            />
+            {showDropdown && (
+              <div className="position-absolute w-100 bg-white shadow-sm p-2 mt-1 rounded border">
+                <button 
+                  className="btn w-100 py-1" 
+                  style={{
+                    backgroundColor: "transparent",
+                    border: "none",
+                    fontSize: "14px",
+                    fontWeight: "300",
+                    color: "gray",
+                    outline: "none",
+                    boxShadow: "none",
+                    cursor: "pointer",
+                    letterSpacing: "1px", // Increased spacing
+                    transition: "color 0.3s ease, font-weight 0.3s ease" // Smooth effect
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.color = "black"; 
+                    e.target.style.fontWeight = "bold";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.color = "gray"; 
+                    e.target.style.fontWeight = "300";
+                  }}
+                >
+                  Explore Topics
+                </button>
+              </div>
+            )}
+
+
+          </div>
+        </div>
+
+        {/* Right Section: Login Button */}
+        <Link 
+          to="/login" 
+          className="btn px-3" 
+          style={{
+            backgroundColor: "black",
+            color: "white",
+            borderRadius: "25px",  // More rounded corners
+            fontWeight: "300",     // Leaner text
+            padding: "6px 16px",   // Slimmer button
+            border: "none",
+            transition: "background-color 0.3s ease"
+          }}
+          onMouseEnter={(e) => e.target.style.backgroundColor = "#333"} // Slight darken on hover
+          onMouseLeave={(e) => e.target.style.backgroundColor = "black"}
+        >
+          Login
+        </Link>
+
       </div>
-    </nav>
+    </header>
   );
-};
+}
 
 export default Header;

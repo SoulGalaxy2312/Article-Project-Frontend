@@ -1,20 +1,19 @@
-import ArticlePreview from './components/ArticlePreview'
+import { Route, Router, Routes } from 'react-router-dom'
+import HomePage from './pages/HomePage/HomePage'
+import LoginPage from './pages/LoginPage'
 import Header from './layouts/Header'
 
 function App() {
-  return (
+  return (  
     <>
       <Header />
-      <ArticlePreview 
-          id="1234-5678" 
-          title="Breaking Tech News" 
-          abstractionContent="This is a short preview of the article..." 
-          mainImageUrl="https://example.com/image.jpg" 
-          createdBy="John Doe" 
-      />
-
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>
     </>
   )
 }
 
 export default App
+
