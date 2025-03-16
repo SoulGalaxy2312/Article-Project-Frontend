@@ -25,8 +25,9 @@ function Header() {
             />
             {showDropdown && (
               <div className="position-absolute w-100 bg-white shadow-sm p-2 mt-1 rounded border">
-                <button 
-                  className="btn w-100 py-1" 
+                <Link 
+                  to="/explore-topics"
+                  className="btn w-100 py-1"
                   style={{
                     backgroundColor: "transparent",
                     border: "none",
@@ -36,8 +37,8 @@ function Header() {
                     outline: "none",
                     boxShadow: "none",
                     cursor: "pointer",
-                    letterSpacing: "1px", // Increased spacing
-                    transition: "color 0.3s ease, font-weight 0.3s ease" // Smooth effect
+                    letterSpacing: "1px",
+                    transition: "color 0.3s ease, font-weight 0.3s ease"
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.color = "black"; 
@@ -49,7 +50,7 @@ function Header() {
                   }}
                 >
                   Explore Topics
-                </button>
+                </Link>
               </div>
             )}
 
