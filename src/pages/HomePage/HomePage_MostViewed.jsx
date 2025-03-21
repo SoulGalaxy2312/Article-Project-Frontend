@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import ArticlePreview from "../../components/ArticlePreview/ArticlePreview"; // Assuming ArticlePreview exists
 
 const HomePage_MostViewed = () => {

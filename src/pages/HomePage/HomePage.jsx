@@ -1,4 +1,3 @@
-import React from "react";
 import HomePage_Latest from "./HomePage_Latest";
 import HomePage_MostViewed from "./HomePage_MostViewed";
 
