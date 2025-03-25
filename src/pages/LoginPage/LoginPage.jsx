@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
-import API_ENDPOINTS from "../../constants/api"
+import API_ENDPOINTS from "../../constants/api";
 
 const LoginPage = () => {
     const [username, setUsername] = useState("");
@@ -19,6 +19,7 @@ const LoginPage = () => {
             navigate("/");
         } catch (error) {
             setMessage("Login failed. Please check your credentials.");
+            console.log(error);
         }
     };
 
@@ -36,6 +37,10 @@ const LoginPage = () => {
                     <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="form-control" />
                 </div>
                 <button onClick={handleLogin} className="btn btn-dark w-100">Login</button>
+                <div className="text-center mt-3">
+                    <span>Don&#39;t have an account yet? </span>
+                    <button className="btn btn-link p-0" onClick={() => navigate("/register")}>Register</button>
+                </div>
             </div>
         </div>
     );

@@ -1,34 +1,150 @@
 import { useParams } from "react-router-dom";
-import axios from "axios";
 import { useState, useEffect } from "react";
+import API_ENDPOINTS from '../constants/api'
+import useAxios from '../hooks/useAxios'
+import { Link } from "react-router-dom";
 
 const FullArticlePage = () => {
   const { id } = useParams();
-  const [article, setArticle] = useState();
-  const VITE_SERVER_ARTICLE_URI = import.meta.env.VITE_SERVER_ARTICLE_URI; // Read from .env file
+  const axiosInstance = useAxios();
+
+  const [article, setArticle] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [error, setError] = useState(null);
+  const [newComment, setNewComment] = useState("");
+  const [replyingTo, setReplyingTo] = useState(null); // Track which comment is being replied to
+  const [replyContent, setReplyContent] = useState(""); // Reply text
+  const [loading, setLoading] = useState(false);
+
+  const endpoint = `${API_ENDPOINTS.API_BASE_URL}/article/${id}`;
 
   useEffect(() => {
     const fetchArticle = async () => {
-      if (!id) return; // Prevents fetching if id is undefined
+      if (!id) return;
 
       try {
-        console.log("Fetching article with ID:", id);
-        const endpoint = `${VITE_SERVER_ARTICLE_URI}` + `${id}`;
-        console.log("Request URL:", endpoint);
-        
-        const response = await axios.get(endpoint);
-        console.log("API Response:", response.data);
-        
-        setArticle(response.data.data); // Assuming the article is inside `data.data`
+        const response = await axiosInstance.get(endpoint);
+        setArticle(response.data.data);
       } catch (error) {
-        console.error("Error fetching article:", error.response ? error.response.data : error.message);
+        if (error.response?.status === 401) {
+          setError("You have to log in first to access this premium article.");
+        } else {
+          console.error("Error fetching article:", error.response?.data || error.message);
+        }
+      }
+    };
+
+    const fetchComments = async () => {
+      try {
+        const response = await axiosInstance.get(`${endpoint}/comments`);
+        setComments(response.data.data);
+      } catch (error) {
+        console.error("Error fetching comments:", error.response?.data || error.message);
       }
     };
 
     fetchArticle();
-  }, [id]); // Re-fetch when ID changes
+    fetchComments();
+  }, [id]);
 
-  // Conditional rendering to avoid null errors
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    setLoading(true);
+    try {
+      const response = await axiosInstance.post(`${endpoint}/createComment`, {
+        articleId: id,
+        content: newComment
+      });
+
+      setComments([response.data.data, ...comments]);
+      setNewComment("");
+    } catch (error) {
+      console.error("Error posting comment:", error);
+    }
+    setLoading(false);
+  };
+
+  const handleReplySubmit = async (commentId) => {
+    if (!replyContent.trim()) return;
+  
+    setLoading(true);
+    try {
+      const response = await axiosInstance.post(`${endpoint}/createComment`, {
+        articleId: id,   // Keep this for identifying the article
+        content: replyContent,
+        parentCommentId: commentId  // Send parentCommentId to indicate it's a reply
+      });
+  
+      // Find the comment and append the new reply
+      setComments((prevComments) =>
+        prevComments.map((comment) =>
+          comment.id === commentId
+            ? { ...comment, replies: [response.data.data, ...comment.replies] }
+            : comment
+        )
+      );
+  
+      setReplyingTo(null);
+      setReplyContent("");
+    } catch (error) {
+      console.error("Error posting reply:", error);
+    }
+    setLoading(false);
+  };
+
+  // Format date
+  const formatDate = (dateString) => new Date(dateString).toLocaleString();
+
+  // Render comments and replies
+  const renderComments = (commentsList, level = 0) => {
+    return commentsList.map((comment) => (
+      <div key={comment.id} className={`border-start p-2 mb-2 ${level > 0 ? "ms-4" : ""}`} 
+           style={{ borderLeft: level > 0 ? "2px solid #007bff" : "none" }}>
+        
+        <p className="mb-1">
+          <strong>{comment.user?.username || "Anonymous"}</strong> 
+          - <small className="text-muted">{formatDate(comment.createdAt)}</small>
+        </p>
+  
+        <p className="mb-1">{comment.content}</p>
+
+        {/* Reply Button */}
+        <button 
+          className="btn btn-link btn-sm p-0" 
+          onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+        >
+          Reply
+        </button>
+
+        {/* Reply Form (Appears when clicking Reply) */}
+        {replyingTo === comment.id && (
+          <div className="mt-2 ms-3">
+            <textarea 
+              className="form-control" 
+              rows="2"
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
+              placeholder="Write a reply..."
+            ></textarea>
+            <button 
+              className="btn btn-primary btn-sm mt-2"
+              disabled={loading || !replyContent.trim()}
+              onClick={() => handleReplySubmit(comment.id)}
+            >
+              {loading ? "Replying..." : "Post Reply"}
+            </button>
+          </div>
+        )}
+
+        {/* Render Nested Replies */}
+        {comment.replies?.length > 0 && renderComments(comment.replies, level + 1)}
+      </div>
+    ));
+  };  
+
+  if (error) return <p className="alert alert-danger">{error}</p>;
   if (!article) return <p>Loading...</p>;
 
   return (
@@ -40,17 +156,22 @@ const FullArticlePage = () => {
         </p>
         <img src={article.mainImageUrl} alt={article.title} className="img-fluid rounded mb-3" />
 
-        {/* Flex container for Topic, Tags, and Views */}
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <p className="mb-0"><strong>Topic:</strong> {article.topic}</p>
-          <div className="d-flex align-items-center">
+          <p className="mb-0">
+            <strong>Topic:</strong>  
+            <Link to={`/search?topicId=${article.topic.id}`} className="ms-1 text-decoration-none">
+              {article.topic.name}
+            </Link>
+          </p>
             <strong>Tags:</strong>
             {article.tags.map(tag => (
-              <span key={tag} className="badge bg-secondary me-2">{tag}</span>
+              <Link 
+              key={tag}  
+              className="badge bg-secondary me-2"
+              to={`/search?tag=${encodeURIComponent(tag)}`}>
+                {tag}
+              </Link>
             ))}
-          </div>
           <p className="mb-0 text-muted"><strong>Views:</strong> {article.views}</p>
-        </div>
 
         {/* Abstract Section */}
         <div className="p-3 bg-light border-start border-primary border-4 rounded mb-3">
@@ -60,6 +181,30 @@ const FullArticlePage = () => {
         {/* Article Content */}
         <div className="mt-3">
           <p>{article.content}</p>
+        </div>
+
+        {/* Comment Section */}
+        <div className="mt-4">
+          <h4>Comments</h4>
+          {comments.length > 0 ? renderComments(comments) : <p>No comments yet.</p>}
+
+          {/* Comment Form */}
+          <form onSubmit={handleCommentSubmit} className="mt-3">
+            <textarea 
+              className="form-control" 
+              rows="3"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Write your comment..."
+            ></textarea>
+            <button 
+              type="submit" 
+              className="btn btn-primary mt-2" 
+              disabled={loading || !newComment.trim()}
+            >
+              {loading ? "Posting..." : "Post Comment"}
+            </button>
+          </form>
         </div>
       </div>
     </div>

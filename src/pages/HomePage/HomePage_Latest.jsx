@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import ArticlePreview from '../../components/ArticlePreview/ArticlePreview'
 import axios from "axios";
+import API_ENDPOINTS from '../../constants/api'
 
 const HomePage_Latest = () => {
   const [articles, setArticles] = useState([]); // Store fetched articles
   const [page, setPage] = useState(0); // Track current page
   const [hasMore, setHasMore] = useState(true); // Check if there are more articles
+  const REQUEST_URI = `${API_ENDPOINTS.API_BASE_URL}/homepage`
 
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_SERVER_HOMEPAGE_URI}` + 'latestArticles', {
+        const response = await axios.get(REQUEST_URI + '/latestArticles', {
           params: { pageNumber: page }, // Send as query params
         });
 
@@ -39,6 +41,7 @@ const HomePage_Latest = () => {
           mainImageUrl={article.mainImageUrl}
           createdBy={article.createdBy}
           createdAt={article.createdAt}
+          isPremium={article.isPremium}
         />
       ))}
 
